@@ -1,0 +1,10 @@
+# Python
+TreeSegmentation.py
+# Ergebnisordner
+WBT/
+Vergleichsarbeiten/
+Literatur/
+Ground_truth/
+FSCT/
+ForestSemantic/
+preprocessing/

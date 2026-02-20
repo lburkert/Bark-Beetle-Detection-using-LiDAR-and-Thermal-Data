@@ -1,0 +1,60 @@
+from WBT.whitebox_tools import WhiteboxTools
+import whitebox_workflows
+import laspy
+import pdal
+import json
+
+wbt = WhiteboxTools()
+wbt.set_working_dir("D:/Masterarbeit/Wenns_Data/PC/")
+wbe = whitebox_workflows.WbEnvironment()
+
+#### Ground classification with Cloth Simulation Filter ####
+#inFile = laspy.read(r"Wenns_aoi.las") # read a las file
+
+json_pipeline = {
+    "pipeline": [
+        {
+            "type": "readers.las",
+            "filename": "D:/Masterarbeit/Wenns_Data/PC/WennsUTM_small.las"
+        },
+        {
+            "type": "filters.outlier"
+        },
+        {
+            "type": "filters.smrf",
+            "returns": "last",
+            "where": "!(Classification == 7)",
+            "slope": 0.2,
+            "window": 16,
+            "threshold": 0.45,
+            "scalar": 1.2
+        },
+        {
+            "type": "filters.expression",
+            "expression": "Classification == 2"
+        },
+        {
+            "type": "writers.las",
+            "filename": "D:/Masterarbeit/output_lidar/Wenns_small_ground.las"
+        }
+    ]
+}
+
+json_pipeline = json.dumps(json_pipeline)
+
+pipeline = pdal.Pipeline(json_pipeline)
+count = pipeline.execute()
+
+
+#### create DEM ####
+
+# print("Interpolating DEM...")
+# wbe.lidar_idw_interpolation(
+# i="/Wenns_Data/PC/Wenns_aoi.las",
+# output="raw_dem.tif",
+# parameter="elevation",
+# returns="last",
+# resolution=1.0,
+# weight=1.0,
+# radius=2.5
+# )
