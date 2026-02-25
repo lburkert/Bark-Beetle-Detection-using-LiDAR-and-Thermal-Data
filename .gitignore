@@ -8,3 +8,6 @@ Ground_truth/
 FSCT/
 ForestSemantic/
 preprocessing/
+
+!preprocessing/Wenns_Data/Single_Tree_Detection.R
+!preprocessing/Wenns_Data/Crop_aoi.R
