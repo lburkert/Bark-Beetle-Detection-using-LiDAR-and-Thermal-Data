@@ -31,7 +31,7 @@ las_nonoise = classify_noise(las_aoi, sor(15,7))
 
 # get only noise points and save them
 las_noise <- filter_poi(las_nonoise, Classification == 18)
-writeLAS(las_noise, "noise_points.las")
+#writeLAS(las_noise, "noise_points.las")
 
 # ---- get cleaned point cloud ----
 las_clean <- filter_poi(las_nonoise, Classification != 18)
@@ -41,7 +41,7 @@ las_clean <- filter_poi(las_nonoise, Classification != 18)
 ####  Cloth Simulation Filter ####
 # classify ground
 las_ground <- classify_ground(las_clean, algorithm = csf(cloth_resolution = 0.1))
-las_ground <- classify_ground(las_clean, algorithm = pmf())
+#las_ground <- classify_ground(las_clean, algorithm = pmf())
 
 p1 <- c(las_ground@header@PHB$`Min X`, las_ground@header@PHB$`Min Y`)
 p2 <- c(las_ground@header@PHB$`Max X`, las_ground@header@PHB$`Max Y`)
@@ -118,13 +118,15 @@ col <- height.colors(25)
 plot(chm, col = col)
 
 # Individual Tree Detection
-ttops_5 <- locate_trees(las_ground, lmf(ws = 5))
-ttops_2 <- locate_trees(las_ground, lmf(ws = 2))
-ttops_1 <- locate_trees(las_ground, lmf(ws = 1))
-ttops_25 <- locate_trees(las_ground, lmf(ws = 2.5))
+ttops_5 <- locate_trees(nlas, lmf(ws = 5))
+ttops_2 <- locate_trees(nlas, lmf(ws = 2))
+ttops_1 <- locate_trees(nlas, lmf(ws = 1))
+ttops_25 <- locate_trees(nlas, lmf(ws = 2.5))
+ttops_28 <- locate_trees(nlas, lmf(ws = 2.8))
+ttops_3 <- locate_trees(nlas, lmf(ws = 3))
 
 plot(chm, col = height.colors(50))
-plot(sf::st_geometry(ttops_5), add = TRUE, pch = 3)
+plot(sf::st_geometry(ttops_25), add = TRUE, pch = 3)
 
 
 
@@ -165,8 +167,8 @@ plot(chm_pitfree_05_2, main = "CHM PITFREE 2", col = col); plot(sf::st_geometry(
 x <- plot(nlas, col = rgb, bg = "white", size = 4)
 add_treetops3d(x, ttops_chm_p2r_02_smoothed)
 
-# XYZ extrahieren
-coords <- st_coordinates(ttops_chm_p2r_02_smoothed)
+# extract XYZ
+coords <- st_coordinates(ttops_3)
 
 df <- data.frame(
   X = coords[,1],
@@ -176,16 +178,22 @@ df <- data.frame(
 
 las <- LAS(df)
 
-projection(las) <- st_crs(ttops_chm_p2r_02_smoothed)$wkt
+projection(las) <- st_crs(ttops_3)$wkt
 
-writeLAS(las, "ttops_2.5.las")
+writeLAS(las, "ttops_3.las")
 
 las_check(las_aoi)
 
 
 # ---- Individual Tree Segmentation ----
 
-algo <- dalponte2016(chm_p2r_02_smoothed, ttops_chm_p2r_02_smoothed)
+algo <- dalponte2016(chm, ttops_28, th_tree = 5, max_cr = 20)
 las <- segment_trees(nlas, algo) # segment point cloud
 plot(las, bg = "white", size = 4, color = "treeID") # visualize trees
-writeLAS(las, "tree_segmented.las")
+writeLAS(las, "tree_segmented_dalponte_pointcloud_max_cr20.las")
+
+
+las <- segment_trees(nlas, li2012())
+#plot(las, bg = "white", size = 4, color = "treeID") # visualize trees
+writeLAS(las, "tree_segmented_li2012.las")
+
